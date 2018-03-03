@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en" ng-app="myapp">
+<head>
+	<meta charset="UTF-8">
+	<title>Prescreening exercise</title>
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootswatch/3.1.0/cyborg/bootstrap.min.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+</head>
+<!-- putting this at the top to remove the jarring load -->
+<script src="http://code.angularjs.org/1.2.10/angular.min.js"></script>
+<body ng-controller="MainCtl">
+	<div class="jumbotron">		
+		<h1>Prescreening exercise</h1>
+	</div>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-sm-3 well">
+				<h3>Lastest 20 Pairs</h3>
+				<ul class="nav nav-pills nav-stacked">
+					<li ng-repeat="pair in pairs">
+						<p>{{"{{"}}pair.Second{{"}}"}} - {{"{{"}}pair.Value{{"}}"}}</p>
+					</li>
+				</ul>
+			</div>
+			<div class="col-sm-3 well">				
+				<button class="btn btn-primary pull-left" ng-click="sum()">Display Sum</button>
+				</br>
+				</br>
+				<h3>Sum - {{"{{"}}sumval{{"}}"}}</h3>
+			</div>
+			<div class="col-sm-3 well">
+				
+				<button class="btn btn-primary pull-left" ng-click="median()">Display Median</button>
+				</br>
+				</br>
+				<h3>Median - {{"{{"}}medianval{{"}}"}}</h3>
+			</div>
+			
+		</div>
+		
+	</div>
+<script src="http://code.angularjs.org/1.2.10/angular-resource.min.js"></script>
+<script>
+	
+	var myapp = new angular.module("myapp", ["ngResource"]);
+
+	myapp.controller("MainCtl", ["$scope", "$resource", "$interval", function($scope, $resource, $interval){
+		
+		var Pair = $resource("/getLastest20");
+		//we can use id as params if we want, but no-need in this case
+		var Sum = $resource("/getSum/:id", {id: '@id'}, {});
+		var Median = $resource("/getMedian");
+
+		$scope.selected = null;		
+		$scope.sumIdx = 0;
+
+		$scope.list = function(idx){			
+			Pair.get(function(data){
+				console.log('data' + JSON.stringify(data))
+				$scope.pairs = data.result;
+				
+			}, function(error){
+				//alert(error.data);
+			});
+		};
+
+		$scope.list();
+		
+		var timer=$interval(function(){
+        	$scope.list();       
+      	}, 5000);
+		
+		$scope.sum = function(){
+			Sum.get({id:$scope.sumIdx}, function(data){
+				$scope.sumval = data.result
+				console.log('sumval: ' + data.result)
+				$scope.sumIdx++
+			}, function(error){
+				console.log(error.data);
+			});
+		}
+		$scope.median = function(idx){
+			Median.get(function(data){
+				$scope.medianval = data.result
+				console.log('medianval: ' + data.result)
+			}, function(error){
+				console.log(error.data);
+			});
+		}
+
+		
+	}]);
+</script>
+</body>
+</html>
